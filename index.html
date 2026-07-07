@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Polski Milenum - System Kasjerski PRO</title>
+    <style>
+        :root {
+            --bg-main: #060608;
+            --bg-card: rgba(18, 18, 24, 0.85);
+            --bg-input: #15151f;
+            --pink-neon: #ff0055;
+            --pink-glow: rgba(255, 0, 85, 0.3);
+            --pink-dark: #b3003b;
+            --text-white: #ffffff;
+            --text-gray: #94a3b8;
+            --border-color: rgba(255, 0, 85, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-white);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 80% 20%, rgba(255, 0, 85, 0.07) 0%, transparent 50%),
+                radial-gradient(circle at 15% 80%, rgba(255, 0, 85, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.5) 0%, #060608 100%);
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        /* LOGO Z OBRAZKA (Różowy kwadrat z zaokrąglonymi rogami i białym symbolem B) */
+        .crypto-logo {
+            width: 64px;
+            height: 64px;
+            background-color: var(--pink-neon);
+            border-radius: 18px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 0 20px var(--pink-glow);
+            margin-bottom: 1rem;
+            user-select: none;
+        }
+
+        /* EKRAN LOGOWANIA */
+        .login-box {
+            width: 100%;
+            max-width: 440px;
+            padding: 3rem 2.5rem;
+            text-align: center;
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .logo-main {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+        }
+
+        .logo-main span {
+            color: var(--pink-neon);
+            text-shadow: 0 0 15px var(--pink-glow);
+        }
+
+        .logo-sub {
+            color: var(--text-gray);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 0.3rem;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-gray);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .input-field {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 1rem;
+            border-radius: 8px;
+            color: var(--text-white);
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--pink-neon);
+            box-shadow: 0 0 15px var(--pink-glow);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--pink-neon), var(--pink-dark));
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--pink-glow);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 0, 85, 0.5);
+        }
+
+        .error-alert {
+            background: rgba(255, 0, 85, 0.1);
+            border: 1px solid var(--pink-neon);
+            color: #ff4d88;
+            padding: 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        /* PANEL GŁÓWNY */
+        .dashboard-layout {
+            display: none;
+            width: 100%;
+            max-width: 1400px;
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .top-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .navbar-brand-box {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .profile-badge {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255,255,255,0.03);
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .avatar-circle {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--pink-neon), #3b0014);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+        }
+
+        .logout-link {
+            color: var(--text-gray);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .logout-link:hover { color: var(--pink-neon); }
+
+        /* Siatka sekcji */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1100px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        .content-card {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card-header-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-header-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: var(--pink-neon);
+            border-radius: 2px;
+            box-shadow: 0 0 8px var(--pink-neon);
+        }
+
+        /* Skarbiec */
+        .vault-holder {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 0.75rem;
+            max-height: 230px;
+            overflow-y: auto;
+        }
+
+        .vault-row {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255,255,255,0.04);
+            padding: 0.75rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .vault-currency {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            margin-bottom: 0.25rem;
+        }
+
+        .vault-money {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-white);
+        }
+
+        /* LICZARKA */
+        .counter-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .counter-item {
+            background: var(--bg-input);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 0.4rem;
+            text-align: center;
+        }
+
+        .counter-item label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-gray);
+            font-weight: bold;
+        }
+
+        .counter-item input {
+            width: 100%;
+            background: #0d0d14;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            text-align: center;
+            padding: 0.3rem;
+            border-radius: 4px;
+        }
+
+        .counter-result-box {
+            background: rgba(255, 0, 85, 0.05);
+            border: 1px solid var(--pink-neon);
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* WYKRES KOŁOWY (CSS Live Chart) */
+        .chart-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            background: rgba(0,0,0,0.2);
+            padding: 1rem;
+            border-radius: 12px;
+        }
+
+        .pie-chart {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: conic-gradient(var(--pink-neon) 0% 35%, #ffffff 35% 70%, #3b0014 70% 100%);
+            box-shadow: 0 0 15px rgba(255,0,85,0.2);
+        }
+
+        .chart-legends {
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+        .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+
+        /* TABELA REJESTRU */
+        .table-holder {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: rgba(255,255,255,0.02);
+            padding: 1rem;
+            color: var(--text-gray);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .action-link {
+            background: transparent;
+            border: 1px solid var(--pink-neon);
+            color: var(--pink-neon);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-link:hover {
+            background: var(--pink-neon);
+            color: white;
+        }
+
+        /* POWIADOMIENIA TOAST */
+        .toast-notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #111116;
+            border-left: 4px solid var(--pink-neon);
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: none;
+            animation: fadeIn 0.3s ease;
+            z-index: 1000;
+        }
+
+        /* DOKUMENT - LIST OFICJALNY */
+        .document-container {
+            grid-column: 1 / -1;
+            display: none;
+            background: #ffffff;
+            color: #111111;
+            padding: 4rem;
+            border-radius: 12px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .doc-close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: #f1f5f9;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #111111;
+            padding-bottom: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .doc-title {
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 3rem;
+        }
+
+        .doc-table {
+            width: 100%;
+            margin: 2rem 0;
+        }
+
+        .doc-table td {
+            color: #111111 !important;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 0;
+        }
+
+        .doc-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6rem;
+        }
+
+        .doc-signature {
+            border-top: 1px solid #111111;
+            width: 220px;
+            text-align: center;
+            padding-top: 0.5rem;
+            color: #475569;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            .document-container, .document-container * { visibility: visible; }
+            .document-container { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; padding: 0; }
+            .doc-close-btn, .btn-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- EKRAN LOGOWANIA -->
+    <div class="glass-panel login-box" id="loginWrapper">
+        <!-- Odwzorowane Logo z obrazka użytkownika -->
+        <div class="crypto-logo">₿</div>
+        <div class="logo-area">
+            <div class="logo-main">BP <span>Milenum</span></div>
+            <div class="logo-sub">Bank Polski Milenum • Terminal Kryto-Kasowy</div>
+        </div>
+        
+        <div class="input-group">
+            <label>Login Pracownika</label>
+            <input type="text" id="userInput" class="input-field" value="wojciech kr">
+        </div>
+        
+        <div class="input-group">
+            <label>Hasło Autoryzacyjne</label>
+            <input type="password" id="passInput" class="input-field" value="krosnal123">
+        </div>
+        
+        <button class="btn-submit" onclick="appLogin()">Zaloguj bezpiecznie</button>
+        <div class="error-alert" id="loginErrorBlock">Błędne dane logowania.</div>
+    </div>
+
+    <!-- PANEL GŁÓWNY SYSTEMU -->
+    <div class="dashboard-layout" id="dashboardWrapper">
+        
+        <div class="top-navbar">
+            <div class="navbar-brand-box">
+                <!-- Logo z obrazka w nawigacji -->
+                <div class="crypto-logo" style="width: 45px; height: 45px; font-size: 1.5rem; border-radius: 12px; margin-bottom:0;">₿</div>
+                <div>
+                    <div class="logo-main" style="font-size: 1.4rem;">BP <span>Milenum</span></div>
+                    <div style="font-size: 0.75rem; color: var(--text-gray);">System Obsługi Skarbca i Kryptowalut • 2026</div>
+                </div>
+            </div>
+            <div class="profile-badge">
+                <div class="avatar-circle">WK</div>
+                <div style="text-align: left; font-size: 0.85rem;">
+                    <div style="font-weight: 700;">Wojciech Krosnal</div>
+                    <div style="color: var(--text-gray); font-size: 0.75rem;">Starszy Administrator Skarbca</div>
+                </div>
+                <div style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 0.8rem;">
+                    <span class="logout-link" onclick="appLogout()">Wyloguj</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            
+            <!-- FORMULARZ NOWEJ WPŁATY -->
+            <div class="glass-panel content-card">
+                <div class="card-header-title">Zaksięguj Nowy Depozyt (Wpłata)</div>
+                
+                <div class="input-group">
+                    <label>Dane Odbiorcy / Beneficjenta</label>
+                    <input type="text" id="formRecipient" class="input-field" placeholder="Nazwisko klienta lub nazwa giełdy/firmy">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                    <div class="input-group">
+                        <label>Wartość / Kwota depozytu</label>
+                        <input type="number" id="formAmount" class="input-field" placeholder="0.00" step="any">
+                    </div>
+                    <div class="input-group">
+                        <label>Waluta</label>
+                        <select id="formCurrency" class="input-field" onchange="toggleLiczarka()">
+                            <option value="PLN">PLN - Złoty</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="BTC">BTC - Bitcoin ₿</option>
+                            <option value="GBP">GBP - Funt</option>
+                            <option value="CHF">CHF - Frank</option>
+                            <option value="CZK">CZK - Korona</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn-submit" onclick="submitDeposit()">Zatwierdź i Zdeponuj Środki</button>
+            </div>
+
+            <!-- LICZARKA PIENIĘDZY -->
+            <div class="glass-panel content-card" id="liczarkaBox">
+                <div class="card-header-title">Liczarka Mechaniczna Gotówki</div>
+                
+                <div class="counter-grid">
+                    <div class="counter-item"><label>200 x</label><input type="number" id="coin200" value="0" oninput="runCashCounter()"></div>
+                    <div class="counter-item"><label>100 x</label><input type="number" id="coin100" value="0" oninput="runCashCounter()"></div>
+                    <div class="counter-item"><label>50 x</label><input type="number" id="coin50" value="0" oninput="runCashCounter()"></div>
+                    <div class="counter-item"><label>20 x</label><input type="number" id="coin20" value="0" oninput="runCashCounter()"></div>
+                    <div class="counter-item"><label>10 x</label><input type="number" id="coin10" value="0" oninput="runCashCounter()"></div>
+                    <div class="counter-item"><label>Rest</label><input type="number" id="coinRest" value="0" oninput="runCashCounter()"></div>
+                </div>
+
+                <div class="counter-result-box">
+                    Suma Przeliczenia: <span id="counterTotalValue">0.00</span>
+                </div>
+                <button class="action-link" style="padding: 0.6rem;" onclick="transferCountToForm()">Załaduj sumę do formularza</button>
+            </div>
+
+            <!-- STAN SKARBCÓW I WYKRES LIVE -->
+            <div class="glass-panel content-card" style="grid-column: 1 / -1; display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+                <div>
+                    <div class="card-header-title" style="margin-bottom: 1rem;">Aktualny Stan Skarbca Głównego</div>
+                    <div class="vault-holder" id="vaultContainer"></div>
+                </div>
+                <!-- Wykres podziału Skarbca -->
+                <div style="border-left: 1px solid rgba(255,255,255,0.05); padding-left: 1.5rem;">
+                    <div class="card-header-title" style="margin-bottom: 1rem;">Struktura Środków</div>
+                    <div class="chart-container">
+                        <div class="pie-chart" id="livePieChart"></div>
+                        <div class="chart-legends">
+                            <div class="legend-item"><div class="legend-color" style="background: var(--pink-neon);"></div><span>Krypto (BTC)</span></div>
+                            <div class="legend-item"><div class="legend-color" style="background: #ffffff;"></div><span>PLN / EUR</span></div>
+                            <div class="legend-item"><div class="legend-color" style="background: #3b0014;"></div><span>Inne waluty</span></div>
+                        </div>
+                    </div>
+                    <button class="action-link" style="width:100%; margin-top: 1rem; padding: 0.5rem;" onclick="generateEODReport()">Generuj Raport Zamknięcia Dnia (EOD)</button>
+                </div>
+            </div>
+
+            <!-- REJESTR OPERACJI -->
+            <div class="glass-panel content-card" style="grid-column: 1 / -1;">
+                <div class="card-header-title">Rejestr Zaksięgowanych Depozytów i Dokumentów</div>
+                <div class="table-holder">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID Transakcji</th>
+                                <th>Czas operacji</th>
+                                <th>Beneficjent / Cel</th>
+                                <th>Wielkość Depozytu</th>
+                                <th>Kasjer</th>
+                                <th style="text-align: right;">Akcja</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableLogBody">
+                            <tr id="noTransactionsRow">
+                                <td colspan="6" style="text-align: center; color: var(--text-gray); padding: 3rem;">Brak operacji w bieżącej sesji kasjera.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- GENEROWANY LIST / OFICJALNE POTWIERDZENIE (FORMAT A4) -->
+        <div class="document-container" id="bankLetterDocument">
+            <button class="doc-close-btn" onclick="hideLetter()">Zamknij podgląd</button>
+            <div class="doc-header">
+                <div>
+                    <h2 style="font-size: 1.4rem; font-weight: 800;">BANK POLSKI MILENUM S.A.</h2>
+                    <p style="font-size: 0.8rem; color: #475569;">Pion Rozliczeń i Aktywów Cyfrowych</p>
+                </div>
+                <div style="text-align: right; font-size: 0.85rem;">
+                    <p><strong>Warszawa, Polska</strong></p>
+                    <p>Data: <span id="docFieldDate">--.--.2026</span></p>
+                </div>
+            </div>
+
+            <div class="doc-title" id="docMainTitle">Potwierdzenie Przyjęcia Depozytu</div>
+            <p style="line-height: 1.6; color: #334155;" id="docMainParagraph">
+                Niniejszym Bank Polski Milenum S.A. potwierdza przyjęcie aktywów i poprawne wykonanie procedury księgowania w wewnętrznej bazie bankowej. Środki zostały zabezpieczone w skarbcu instytucji.
+            </p>
+
+            <table class="doc-table">
+                <tr><td style="width: 35%; font-weight: 600;">Identyfikator Dokumentu:</td><td id="docFieldId" style="font-weight:700;">-</td></tr>
+                <tr><td style="font-weight: 600;">Odbiorca / Podmiot docelowy:</td><td id="docFieldRecipient" style="font-weight:600;">-</td></tr>
+                <tr><td style="font-weight: 600;">Wielkość Depozytu:</td><td id="docFieldAmount" style="font-size: 1.2rem; font-weight: 800;">-</td></tr>
+                <tr><td style="font-weight: 600;">Kasjer Autoryzujący:</td><td id="docFieldEmployee">-</td></tr>
+            </table>
+
+            <div class="doc-footer">
+                <div class="doc-signature">Pieczęć Departamentu<br>Bank Polski Milenum</div>
+                <div class="doc-signature">Podpis Kasjera Operacyjnego:<br><span id="docFieldSignature" style="font-style: italic; font-weight: 700;">Wojciech Krosnal</span></div>
+            </div>
+            <button class="btn-print" style="background:#111; color:#fff; padding:0.8rem 1.5rem; border:none; border-radius:6px; font-weight:700; margin-top:2rem; cursor:pointer;" onclick="window.print()">Wydrukuj Dokument (A4)</button>
+        </div>
+
+    </div>
+
+    <!-- NOTIFICATION SYSTEM -->
+    <div class="toast-notification" id="toastBox">Transakcja sfinalizowana pomyślnie.</div>
+
+    <script>
+        const AUTH_USER = "wojciech kr";
+        const AUTH_PASS = "krosnal123";
+        const WORKER_NAME = "Wojciech Krosnal";
+
+        let vaultBalances = { PLN: 25000.00, EUR: 4200.00, BTC: 1.34200000, GBP: 0.00, CHF: 0.00, CZK: 0.00 };
+        let dbTransactions = [];
+        let baseTxId = 51200;
+        let calculatedSumGlobal = 0.00;
+
+        window.onload = function() { renderVaults(); updateChart(); };
+
+        function renderVaults() {
+            const container = document.getElementById('vaultContainer');
+            container.innerHTML = '';
+            for (const [currency, value] of Object.entries(vaultBalances)) {
+                const isCrypto = currency === 'BTC';
+                const fixVal = isCrypto ? value.toFixed(8) : value.toFixed(2);
+                const unit = isCrypto ? ' ₿' : ` ${currency.toLowerCase()}`;
+                
+                const row = document.createElement('div');
+                row.className = 'vault-row';
+                row.innerHTML = `
+                    <div class="vault-currency" style="${currency==='BTC'||currency==='PLN'?'color:var(--pink-neon);':''};">${currency}</div>
+                    <div class="vault-money">${fixVal}${unit}</div>
+                `;
+                container.appendChild(row);
+            }
+        }
+
+        function updateChart() {
+            const btcWeight = Math.min(100, Math.max(10, (vaultBalances.BTC * 60000) / 1000));
+            const pie = document.getElementById('livePieChart');
+            if (pie) {
+                pie.style.background = `conic-gradient(var(--pink-neon) 0% ${btcWeight}%, #ffffff ${btcWeight}% 80%, #3b0014 80% 100%)`;
+            }
+        }
+
+        function toggleLiczarka() {
+            const cur = document.getElementById('formCurrency').value;
+            const liczarka = document.getElementById('liczarkaBox');
+            liczarka.style.opacity = (cur === 'BTC') ? '0.3' : '1';
+        }
+
+        function appLogin() {
+            if (document.getElementById('userInput').value.trim() === AUTH_USER && document.getElementById('passInput').value === AUTH_PASS) {
+                document.getElementById('loginWrapper').style.display = 'none';
+                document.getElementById('dashboardWrapper').style.display = 'block';
+            } else {
+                document.getElementById('loginErrorBlock').style.display = 'block';
+            }
+        }
+
+        function appLogout() {
+            document.getElementById('dashboardWrapper').style.display = 'none';
+            document.getElementById('loginWrapper').style.display = 'block';
+            document.getElementById('passInput').value = '';
+        }
+
+        function runCashCounter() {
+            const n200 = (parseInt(document.getElementById('coin200').value) || 0) * 200;
+            const n100 = (parseInt(document.getElementById('coin100').value) || 0) * 100;
+            const n50 = (parseInt(document.getElementById('coin50').value) || 0) * 50;
+            const n20 = (parseInt(document.getElementById('coin20').value) || 0) * 20;
+            const n10 = (parseInt(document.getElementById('coin10').value) || 0) * 10;
+            const rest = parseFloat(document.getElementById('coinRest').value) || 0;
+
+            calculatedSumGlobal = n200 + n100 + n50 + n20 + n10 + rest;
+            document.getElementById('counterTotalValue').innerText = calculatedSumGlobal.toFixed(2);
+        }
+
+        function transferCountToForm() {
+            if (document.getElementById('formCurrency').value === 'BTC') return alert("Liczarka bilonu nie obsługuje kryptowalut!");
+            document.getElementById('formAmount').value = calculatedSumGlobal.toFixed(2);
+        }
+
+        function showToast(text) {
+            const t = document.getElementById('toastBox');
+            t.innerText = text;
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 3000);
+        }
+
+        function submitDeposit() {
+            const rec = document.getElementById('formRecipient').value.trim();
+            const amt = parseFloat(document.getElementById('formAmount').value);
+            const cur = document.getElementById('formCurrency').value;
+
+            if (!rec || isNaN(amt) || amt <= 0) return alert("Wprowadź prawidłowe dane operacji.");
+
+            vaultBalances[cur] += amt;
+            renderVaults();
+            updateChart();
+
+            baseTxId++;
+            const stamp = new Date();
+            const formattedTime = stamp.toLocaleDateString() + " " + stamp.toLocaleTimeString();
+            const valStr = cur === 'BTC' ? amt.toFixed(6) + " BTC ₿" : amt.toFixed(2) + " " + cur;
+
+            const tx = { txId: "BPM-" + baseTxId, date: formattedTime, recipient: rec, moneyValue: valStr, worker: WORKER_NAME };
+            dbTransactions.unshift(tx);
+
+            document.getElementById('noTransactionsRow').style.display = 'none';
+            const tableBody = document.getElementById('tableLogBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="font-weight:700; color:var(--pink-neon);">${tx.txId}</td>
+                <td>${tx.date}</td>
+                <td><strong>${tx.recipient}</strong></td>
+                <td>${tx.moneyValue}</td>
+                <td>${tx.worker}</td>
+                <td style="text-align:right;"><button class="action-link" onclick="buildDocument('${tx.txId}', false)">Pismo</button></td>
+            `;
+            tableBody.insertBefore(row, tableBody.firstChild);
+
+            showToast("Zdeponowano środki: " + valStr);
+            document.getElementById('formRecipient').value = '';
+            document.getElementById('formAmount').value = '';
+        }
+
+        function buildDocument(searchId, isEOD) {
+            document.getElementById('bankLetterDocument').style.display = 'block';
+            document.getElementById('bankLetterDocument').scrollIntoView({ behavior: 'smooth' });
+            
+            if (isEOD) {
+                document.getElementById('docMainTitle').innerText = "DOBOWA DEKLARACJA SKARBCÓW (EOD)";
+                document.getElementById('docFieldId').innerText = "EOD/REPORT/" + new Date().getFullYear();
+                document.getElementById('docFieldRecipient').innerText = "Zarząd Główny Banku Polskiego Milenum";
+                document.getElementById('docFieldAmount').innerText = `PLN: ${vaultBalances.PLN.toFixed(2)} | BTC: ${vaultBalances.BTC.toFixed(4)}`;
+                document.getElementById('docMainParagraph').innerText = "Oficjalny raport zamknięcia kasy i skarbca wygenerowany automatycznie na koniec sesji kasjerskiej.";
+                return;
+            }
+
+            const data = dbTransactions.find(t => t.txId === searchId);
+            if (!data) return;
+            document.getElementById('docMainTitle').innerText = "Potwierdzenie Przyjęcia Depozytu";
+            document.getElementById('docFieldId').innerText = data.txId.replace("BPM-", "BPM/DOC/") + "/2026";
+            document.getElementById('docFieldDate').innerText = data.date.split(" ")[0];
+            document.getElementById('docFieldRecipient').innerText = data.recipient;
+            document.getElementById('docFieldAmount').innerText = data.moneyValue;
+            document.getElementById('docFieldEmployee').innerText = data.worker;
+        }
+
+        function generateEODReport() { buildDocument(null, true); }
+        function hideLetter() { document.getElementById('bankLetterDocument').style.display = 'none'; }
+    </script>
+</body>
+</html>
